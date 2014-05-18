@@ -70,7 +70,9 @@ end COMPONENT;
  
 SIGNAL	detector_salida_OUT, detector_entrada_OUT: BIT;
 SIGNAL	count: BIT_VECTOR (7 DOWNTO 0);
-
+SIGNAL to_mostrar_planta BIT_VECTOR (1 DOWNTO 0); -- Salidas del buscador, que se pasarán al decodificador para mostrarlas por pantalla.
+SIGNAL to_mostrar_columna BIT_VECTOR(2 DOWNTO 0);
+SIGNAL to_mostrar_fila BIT_VECTOR(2 DOWNTO 0);
 -- ******************
 
 BEGIN
@@ -85,6 +87,7 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 		IF detector_salida_OUT = '1' AND detector_salida_OUT'EVENT THEN
 			-- usar sumador/restador para restar, pasarle que tiene que restar y la cuenta total. Devolverá el valor de la nueva cuenta total -1.
 			--RES: suma_resta PORT MAP(count, '1', count);
+			--TO-DO: Comprobar si funciona de la manera anterior si no se hará como sigue:
 			count <= (count - 1);
 
 		END IF;
@@ -94,11 +97,11 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 			--SUM: suma_resta PORT MAP (count, '0', count);
 			count <= (count + 1);
 
-			-- TODO: buscar una plaza libre para posteriormente mostrarla:
-				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
+			-- TO-DO: buscar una plaza libre para posteriormente mostrarla:
+				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada 0/1][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
 				-- 2. Cuando se tenga la plaza libre por planta y si hay o no disponible, se mandará a buscar, para que nos quede sólo una plaza que será la escogida, a un selector de planta.
-			-- TODO: la plaza libre asignada se pasará al decodificador para posteriormente mostrarla en la pantalla según corresponda y poder visualizarla mediante digitos.
-
+			-- la plaza libre asignada se pasará al decodificador para posteriormente mostrarla en la pantalla según corresponda y poder visualizarla mediante digitos y/o letras.
+			DECOD: Deco_Parking PORT MAP (to_mostrar_planta, to_mostrar_columna, to_mostrar_fila, --Faltan las salidas, hay que ver como hacerlo   );  
 		END IF;
 
 		-- Actualizar identificador de parking lleno o vacío.
