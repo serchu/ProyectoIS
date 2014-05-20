@@ -34,10 +34,10 @@ ARCHITECTURE controlador_arch OF controlador_parking IS
 -- ********* Declaración de componentes a usar *********
 
 COMPONENT Deco_Parking IS
-	PORT(entradas_planta:IN BIT_VECTOR(1 DOWNTO 0);entradas_plaza1:IN BIT_VECTOR(2 DOWNTO 0);entrada_plaza2: IN BIT_VECTOR(2 DOWNTO 0); 
-	  salidas_planta:OUT BIT_VECTOR(6 DOWNTO 0); salidas_plaza1:OUT BIT_VECTOR(6 DOWNTO 0);
-	  salidas_plaza2:OUT BIT_VECTOR(6 DOWNTO 0);selector1:OUT BIT_VECTOR(2 DOWNTO 0);
-	  selector:OUT BIT_VECTOR(2 DOWNTO 0);selector2:OUT BIT_VECTOR(2 DOWNTO 0)
+	PORT(
+		entradas_planta:IN BIT_VECTOR(1 DOWNTO 0);entradas_plaza1:IN BIT_VECTOR(2 DOWNTO 0);entrada_plaza2: IN BIT_VECTOR(2 DOWNTO 0); 
+		salidas_planta:OUT BIT_VECTOR(6 DOWNTO 0); salidas_plaza1:OUT BIT_VECTOR(6 DOWNTO 0);
+		salidas_plaza2:OUT BIT_VECTOR(6 DOWNTO 0)
 		);
 End COMPONENT;
 
@@ -109,7 +109,6 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 			to_mostrar_columna(2)<=lo_que_devuelve_el_buscador(5);
 			to_mostrar_planta(0)<=lo_que_devuelve_el_buscador(6);
 			to_mostrar_planta(1)<=lo_que_devuelve_el_buscador(7);
-
 
 			-- TO-DO: buscar una plaza libre para posteriormente mostrarla:
 				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
