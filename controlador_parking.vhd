@@ -30,6 +30,7 @@ END controlador_parking;
 
 ARCHITECTURE controlador_arch OF controlador_parking IS
 
+
 -- ********* Declaración de componentes a usar *********
 
 COMPONENT Deco_Parking IS
@@ -49,35 +50,54 @@ end COMPONENT;
 
 -- ********* Declaración de señales *********
  
-SIGNAL	detector_salida_OUT, detector_entrada_OUT: BIT;
-SIGNAL	count: BIT_VECTOR (7 DOWNTO 0);
-SIGNAL lo_que_devuelve_el_buscador (8 DOWNTO 0);
-SIGNAL to_mostrar_planta BIT_VECTOR (1 DOWNTO 0);
-SIGNAL to_mostrar_columna bit_vector(2 DOWNTO 0)
-SIGNAL to_mostrar_fila bit_vector(2 DOWNTO 0);
+SIGNAL detector_salida_OUT, detector_entrada_OUT: BIT;
+SIGNAL count:INTEGER;
+SIGNAL lo_que_devuelve_el_buscador: BIT_VECTOR (8 DOWNTO 0);
+SIGNAL to_mostrar_planta: BIT_VECTOR (1 DOWNTO 0);
+SIGNAL to_mostrar_columna: bit_vector(2 DOWNTO 0);
+SIGNAL to_mostrar_fila: bit_vector(2 DOWNTO 0);
 
 -- ******************
+function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
+return BIT_VECTOR IS
+	variable salida: BIT_VECTOR(8 DOWNTO 0);
+	variable i:BIT;
+	variable contador: INTEGER;
+	begin
+		i:='1';
+		contador:=0;
+		while i = '1' loop
+		        i := sensores(contador);
+			    contador := contador + 1;
+				if i=0
+					salida:=contador;
+				elsif contador=256
+					salida:=contador;
+				end if;
+	     end loop;
+	return salida;
+END buscador;
 
 BEGIN
 
 PROCESS(clk, sensor_entrada, sensor_salida)
 	BEGIN
 		-- mandar las entradas sensor_entrada y sensor_salida a su detector de secuencia correspondiente junto con el reloj, este devolverá un uno cuando se detecte la secuencia 00, 
-		-- que será cuando un coche ha interrumpido el laser que compone el sensor.
+		-- que sera cuando un coche ha interrumpido el laser que compone el sensor.
 		SENSOREN: detector_secuencia PORT MAP(clk, sensor_entrada, detector_entrada_OUT);
 		SENSORSAL: detector_secuencia PORT MAP(clk, sensor_salida, detector_salida_OUT);
 
 		IF detector_salida_OUT = '1' AND detector_salida_OUT'EVENT THEN
 			-- usar sumador/restador para restar, pasarle que tiene que restar y la cuenta total. Devolverá el valor de la nueva cuenta total -1.
 			--RES: suma_resta PORT MAP(count, '1', count);
-			count <= (count - 1);
+			count <= count-1;
 
 		END IF;
 
-		IF detector_entrada_OUT = '1' AND detector_entrada_OUT'EVENT AND count<257 THEN
+		IF detector_entrada_OUT = '1' AND detector_entrada_OUT'EVENT THEN
 			-- usar sumador/restador para sumar, pasarle que tiene que sumar y la cuenta total. Devolverá el valor de la nueva cuenta total +1
 			--SUM: suma_resta PORT MAP (count, '0', count);
-			count <= (count + 1);
+			count <= count+1;
 
 			lo_que_devuelve_el_buscador<=buscador(sensores);
 
@@ -99,29 +119,11 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 
 		DECOD: Decod_Planta PORT MAP(estado_parking, to_mostrar_planta, to_mostrar_columna, to_mostrar_fila, display_planta, display_columna, display_fila);
 		-- Actualizar identificador de parking lleno o vacío.
-		IF count = "11111111" THEN
+		IF count = 255 THEN
 			estado_parking <='1'; -- Parking lleno, luz roja.
 			ELSE estado_parking <= '0';
 		END IF;
 
 END PROCESS;
-
-FUNCTION buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
-return BIT_VECTOR IS
-	variable salida: BIT_VECTOR(8 DOWNTO 0);
-	variable i := 1;
-	variable contador := 0;
-	begin
-		while i = 1 loop
-		        i <= entrada(contador) after 5 ns;
-			    contador := contador + 1;
-				if i=0
-					salida<=contador;
-				elsif contador=256
-					salida<=contador;
-				end if;
-	     end loop;
-	return salida;
-END buscador;
 
 END controlador_arch;

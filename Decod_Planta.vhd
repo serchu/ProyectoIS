@@ -15,12 +15,12 @@ End Deco_Parking;
 
 ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
 
-  function planta(ent_plant:BIT_VECTOR(1 downto 0))
+  function planta(lleno: IN BIT; ent_plant:BIT_VECTOR(1 downto 0))
   return BIT_VECTOR is
     variable salida: BIT_VECTOR(6 downto 0);
     BEGIN
       if lleno ='1' then
-        salida2:="1111110";
+        salida:="1111110";
       else
         CASE ent_plant is
         WHEN "00"=>salida:="0000001";
@@ -34,12 +34,12 @@ ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
   
     END planta;
     
-  function columna(ent_columna:BIT_VECTOR(2 downto 0))
+  function columna(lleno: IN BIT;ent_columna:BIT_VECTOR(2 downto 0))
   return BIT_VECTOR is
     variable salida1: BIT_VECTOR(6 downto 0);
     BEGIN
       if lleno ='1' then
-        salida2:="1111110";
+        salida1:="1111110";
       else
         CASE ent_columna is
         WHEN "000"=>salida1:="0000001";
@@ -58,7 +58,7 @@ ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
     return salida1;
     END columna;
     
-  function fila(ent_fila:BIT_VECTOR(2 downto 0))
+  function fila(lleno: IN BIT; ent_fila:BIT_VECTOR(2 downto 0))
   return BIT_VECTOR is
     variable salida2: BIT_VECTOR(6 downto 0);
     BEGIN
@@ -84,12 +84,10 @@ ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
  END fila;
     
 BEGIN
+salidas_planta<=planta(lleno,entradas_planta);
 
+salidas_plaza1<=columna(lleno,ent_columna);
 
-salidas_planta<=planta(entradas_planta);
-
-salidas_plaza1<=columna(entradas_plaza1);
-
-salidas_plaza2<=fila(entradas_plaza2);
+salidas_plaza2<=fila(lleno,ent_fila);
 
 END dec_parking_funcion;
