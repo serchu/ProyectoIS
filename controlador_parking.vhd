@@ -17,32 +17,20 @@ ENTITY controlador_parking IS
 		clk: IN BIT;
 		sensor_entrada: IN BIT;
 		sensor_salida: IN BIT;
+		sensores: IN BIT_VECTOR (255 DOWNTO 0);
 
-		estado_parking: OUT BIT
+		estado_parking: OUT BIT;
+		display_planta: OUT BIT_VECTOR(6 DOWNTO 0);
+		display_columna: OUT BIT_VECTOR(6 DOWNTO 0);
+		display_fila: OUT BIT_VECTOR(6 DOWNTO 0)
 		);
 END controlador_parking;
 
+-- ************ DECLARACION ARQUITECTURA ************
 
 ARCHITECTURE controlador_arch OF controlador_parking IS
 
 -- ********* Declaración de componentes a usar *********
-
-COMPONENT suma_resta 
-	PORT ( 
-		A: IN BIT_VECTOR (7 DOWNTO 0); 
-		Sel: IN BIT; 
-		Salida: OUT BIT_VECTOR (7 DOWNTO 0)
-		); 
-end COMPONENT; 
-
-
-COMPONENT selector IS
-	PORT(a,b,c,d: IN BIT_VECTOR(6 DOWNTO 0);
-		planta: OUT BIT_VECTOR(1 DOWNTO 0);
-		columna, fila: OUT BIT_VECTOR(2 DOWNTO 0)
-		);
-END COMPONENT;
-
 
 COMPONENT Deco_Parking IS
 	PORT(entradas_planta:IN BIT_VECTOR(1 DOWNTO 0);entradas_plaza1:IN BIT_VECTOR(2 DOWNTO 0);entrada_plaza2: IN BIT_VECTOR(2 DOWNTO 0); 
@@ -51,13 +39,6 @@ COMPONENT Deco_Parking IS
 	  selector:OUT BIT_VECTOR(2 DOWNTO 0);selector2:OUT BIT_VECTOR(2 DOWNTO 0)
 		);
 End COMPONENT;
-
-
-COMPONENT buscador IS 
-	PORT(e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14,e15,e16,e18,e19,e20,e21,e22,e23,e24,e25,e26,e27,e28,e29,e230,e31,e32,e33,e34,e35,e36,e37,e38,e39,e40,e41,e42,e43,e44,e45,e46,e47,e48,e49,e50,e51,e52,e53,e54,e55,e56,e57,e58,e59,e60,e61,e62,e63:in bit;
-		s:OUT BIT_VECTOR(6 DOWNTO 0)
-		);
-END COMPONENT;
 
 
 COMPONENT detector_secuencia is 
@@ -70,9 +51,11 @@ end COMPONENT;
  
 SIGNAL	detector_salida_OUT, detector_entrada_OUT: BIT;
 SIGNAL	count: BIT_VECTOR (7 DOWNTO 0);
-SIGNAL to_mostrar_planta BIT_VECTOR (1 DOWNTO 0); -- Salidas del buscador, que se pasarán al decodificador para mostrarlas por pantalla.
-SIGNAL to_mostrar_columna BIT_VECTOR(2 DOWNTO 0);
-SIGNAL to_mostrar_fila BIT_VECTOR(2 DOWNTO 0);
+SIGNAL lo_que_devuelve_el_buscador (8 DOWNTO 0);
+SIGNAL to_mostrar_planta BIT_VECTOR (1 DOWNTO 0);
+SIGNAL to_mostrar_columna bit_vector(2 DOWNTO 0)
+SIGNAL to_mostrar_fila bit_vector(2 DOWNTO 0);
+
 -- ******************
 
 BEGIN
@@ -87,23 +70,34 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 		IF detector_salida_OUT = '1' AND detector_salida_OUT'EVENT THEN
 			-- usar sumador/restador para restar, pasarle que tiene que restar y la cuenta total. Devolverá el valor de la nueva cuenta total -1.
 			--RES: suma_resta PORT MAP(count, '1', count);
-			--TO-DO: Comprobar si funciona de la manera anterior si no se hará como sigue:
 			count <= (count - 1);
 
 		END IF;
 
-		IF detector_entrada_OUT = '1' AND detector_entrada_OUT'EVENT THEN
+		IF detector_entrada_OUT = '1' AND detector_entrada_OUT'EVENT AND count<257 THEN
 			-- usar sumador/restador para sumar, pasarle que tiene que sumar y la cuenta total. Devolverá el valor de la nueva cuenta total +1
 			--SUM: suma_resta PORT MAP (count, '0', count);
 			count <= (count + 1);
 
+			lo_que_devuelve_el_buscador<=buscador(sensores);
+
+			to_mostrar_fila(0)<=lo_que_devuelve_el_buscador(0);
+			to_mostrar_fila(1)<=lo_que_devuelve_el_buscador(1);
+			to_mostrar_fila(2)<=lo_que_devuelve_el_buscador(2);
+			to_mostrar_columna(0)<=lo_que_devuelve_el_buscador(3);
+			to_mostrar_columna(1)<=lo_que_devuelve_el_buscador(4);
+			to_mostrar_columna(2)<=lo_que_devuelve_el_buscador(5);
+			to_mostrar_planta(0)<=lo_que_devuelve_el_buscador(6);
+			to_mostrar_planta(1)<=lo_que_devuelve_el_buscador(7);
+
+
 			-- TO-DO: buscar una plaza libre para posteriormente mostrarla:
-				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada 0/1][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
+				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
 				-- 2. Cuando se tenga la plaza libre por planta y si hay o no disponible, se mandará a buscar, para que nos quede sólo una plaza que será la escogida, a un selector de planta.
-			-- la plaza libre asignada se pasará al decodificador para posteriormente mostrarla en la pantalla según corresponda y poder visualizarla mediante digitos y/o letras.
-			DECOD: Deco_Parking PORT MAP (to_mostrar_planta, to_mostrar_columna, to_mostrar_fila, --Faltan las salidas, hay que ver como hacerlo   );  
+			-- TO-DO: la plaza libre asignada se pasará al decodificador para posteriormente mostrarla en la pantalla según corresponda y poder visualizarla mediante digitos.
 		END IF;
 
+		DECOD: Decod_Planta PORT MAP(estado_parking, to_mostrar_planta, to_mostrar_columna, to_mostrar_fila, display_planta, display_columna, display_fila);
 		-- Actualizar identificador de parking lleno o vacío.
 		IF count = "11111111" THEN
 			estado_parking <='1'; -- Parking lleno, luz roja.
@@ -111,5 +105,23 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 		END IF;
 
 END PROCESS;
+
+FUNCTION buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
+return BIT_VECTOR IS
+	variable salida: BIT_VECTOR(8 DOWNTO 0);
+	variable i := 1;
+	variable contador := 0;
+	begin
+		while i = 1 loop
+		        i <= entrada(contador) after 5 ns;
+			    contador := contador + 1;
+				if i=0
+					salida<=contador;
+				elsif contador=256
+					salida<=contador;
+				end if;
+	     end loop;
+	return salida;
+END buscador;
 
 END controlador_arch;
