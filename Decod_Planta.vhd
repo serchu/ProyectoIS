@@ -6,11 +6,7 @@ ENTITY Deco_Parking IS
    salidas_plaza2:OUT BIT_VECTOR(6 DOWNTO 0)
    );
 
---PORT(entradas_planta:IN STD_LOGIC_VECTOR(1 DOWNTO 0);ent_columna:IN STD_LOGIC_VECTOR(2 DOWNTO 0);ent_fila: IN STD_LOGIC_VECTOR(2 DOWNTO 0); 
- -- salidas_planta:OUT STD_LOGIC_VECTOR(6 DOWNTO 0); salidas_plaza1:OUT std_logic_vector(6 DOWNTO 0);
- -- salidas_plaza2:OUT std_logic_vector(6 DOWNTO 0);selector1:OUT std_logic_vector(2 DOWNTO 0);
- -- selector:OUT std_logic_vector(2 DOWNTO 0);selector2:OUT std_logic_vector(2 DOWNTO 0));
-  
+
 End Deco_Parking;
 
 ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
@@ -84,6 +80,7 @@ ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
  END fila;
     
 BEGIN
+
 salidas_planta<=planta(lleno,entradas_planta);
 
 salidas_plaza1<=columna(lleno,ent_columna);
