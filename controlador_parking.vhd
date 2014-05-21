@@ -54,30 +54,33 @@ SIGNAL detector_salida_OUT, detector_entrada_OUT: BIT;
 SIGNAL count:INTEGER;
 SIGNAL lo_que_devuelve_el_buscador: BIT_VECTOR (8 DOWNTO 0);
 SIGNAL to_mostrar_planta: BIT_VECTOR (1 DOWNTO 0);
-SIGNAL to_mostrar_columna: bit_vector(2 DOWNTO 0);
-SIGNAL to_mostrar_fila: bit_vector(2 DOWNTO 0);
+SIGNAL to_mostrar_columna: BIT_VECTOR(2 DOWNTO 0);
+SIGNAL to_mostrar_fila: BIT_VECTOR(2 DOWNTO 0);
 
--- ******************
+-- ********* Declaración de funciones *********
+
 function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
-return BIT_VECTOR IS
-	variable salida: BIT_VECTOR(8 DOWNTO 0);
-	variable i:BIT;
-	variable contador: INTEGER;
-	begin
-		i:='1';
-		contador:=0;
-		while i = '1' loop
-		        i := sensores(contador);
-			    contador := contador + 1;
+	return BIT_VECTOR IS
+		variable salida: BIT_VECTOR(8 DOWNTO 0);
+		variable i:BIT;
+		variable contador: INTEGER;
+		begin
+			i:='1';
+			contador:=0;
+			while i = '1' loop
+				i := sensores(contador);
+				contador := contador + 1;
 				if i=0
-					salida:=contador;
+					salida:=conv_std_logic_vector(contador,9);
 				elsif contador=256
-					salida:=contador;
+					salida:=conv_std_logic_vector(contador,9);
 				end if;
-	     end loop;
-	return salida;
-END buscador;
+			end loop;
+		return salida;
+	END buscador;
 
+
+-- ********** COMIENZO DE PROGRAMA **********
 BEGIN
 
 PROCESS(clk, sensor_entrada, sensor_salida)

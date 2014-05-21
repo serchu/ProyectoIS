@@ -5,9 +5,8 @@ ENTITY Deco_Parking IS
    salidas_planta:OUT BIT_VECTOR(6 DOWNTO 0); salidas_plaza1:OUT BIT_VECTOR(6 DOWNTO 0);
    salidas_plaza2:OUT BIT_VECTOR(6 DOWNTO 0)
    );
-
-
 End Deco_Parking;
+
 
 ARCHITECTURE dec_parking_funcion OF Deco_Parking IS
 
