@@ -71,9 +71,9 @@ function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
 				i := sensores(contador);
 				contador := contador + 1;
 				if i=0
-					salida:=conv_std_logic_vector(contador,9).to_bitvector;
+					salida<=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
 				elsif contador=256
-					salida:=conv_std_logic_vector(contador,9).to_bitvector;
+					salida<=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
 				end if;
 			end loop;
 		return salida;
