@@ -17,7 +17,11 @@ ENTITY controlador_parking IS
 		clk: IN BIT;
 		sensor_entrada: IN BIT;
 		sensor_salida: IN BIT;
-		sensores: IN BIT_VECTOR (255 DOWNTO 0);
+		sensores_planta1: IN BIT_VECTOR (63 DOWNTO 0);
+		sensores_planta2: IN BIT_VECTOR (63 DOWNTO 0);
+		sensores_planta3: IN BIT_VECTOR (63 DOWNTO 0);
+		sensores_planta4: IN BIT_VECTOR (63 DOWNTO 0);
+
 
 		luz_estado: OUT BIT;
 		display_planta: OUT BIT_VECTOR(6 DOWNTO 0);
@@ -53,7 +57,8 @@ FOR ALL: sensor USE ENTITY WORK.detector_secuencia(arqDetector);
 
 -- ********* Declaración de señales *********
  
-SIGNAL detector_salida_OUT, detector_entrada_OUT: BIT;
+SIGNAL detector_salida_OUT: BIT;
+SIGNAL detector_entrada_OUT: BIT;
 SIGNAL count:INTEGER;
 SIGNAL plaza_libre: BIT_VECTOR (8 DOWNTO 0);
 SIGNAL to_mostrar_planta: BIT_VECTOR (1 DOWNTO 0);
@@ -65,14 +70,14 @@ SIGNAL v: INTEGER;
 
 -- ********* Declaración de funciones *********
 
-function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
+function buscador(sensores: BIT_VECTOR(63 DOWNTO 0))
 		return INTEGER IS
 		variable i:BIT;
 		variable contador: INTEGER;
 	begin
 		i:='1';
 		contador:=0;
-		while i = '1' or contador = 256 loop
+		while i = '1' or contador = 64 loop
 			i := sensores(contador);
 			contador := contador + 1;
 		end loop;
@@ -107,9 +112,26 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 			--SUM: suma_resta PORT MAP (count, '0', count);
 			count <= count+1;
 
-			v<=buscador(sensores); -- En entero que devuelve el buscador
+			v<=buscador(sensores_planta1); -- En entero que devuelve el buscador
 			a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
 			plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
+			if plaza_libre(8)='1' then
+				v<=buscador(sensores_planta2); -- En entero que devuelve el buscador
+				a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
+				plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
+
+				if plaza_libre(8)='1' then
+					v<=buscador(sensores_planta3); -- En entero que devuelve el buscador
+					a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
+					plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
+					
+					if plaza_libre(8)='1' then
+						v<=buscador(sensores_planta4); -- En entero que devuelve el buscador
+						a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
+						plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
+					end if;						
+				end if ;
+			end if;
 
 			to_mostrar_fila(0)<=plaza_libre(0);
 			to_mostrar_fila(1)<=plaza_libre(1);
