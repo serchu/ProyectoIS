@@ -55,33 +55,30 @@ FOR ALL: sensor USE ENTITY WORK.detector_secuencia(arqDetector);
  
 SIGNAL detector_salida_OUT, detector_entrada_OUT: BIT;
 SIGNAL count:INTEGER;
-SIGNAL lo_que_devuelve_el_buscador: BIT_VECTOR (8 DOWNTO 0);
+SIGNAL plaza_libre: BIT_VECTOR (8 DOWNTO 0);
 SIGNAL to_mostrar_planta: BIT_VECTOR (1 DOWNTO 0);
 SIGNAL to_mostrar_columna: BIT_VECTOR(2 DOWNTO 0);
 SIGNAL to_mostrar_fila: BIT_VECTOR(2 DOWNTO 0);
 SIGNAL estado_parking: BIT;
+signal a: std_logic_vector(8 DOWNTO 0);
+
 
 -- ********* Declaración de funciones *********
 
 function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
-	return BIT_VECTOR IS
-		variable salida: BIT_VECTOR(8 DOWNTO 0);
+		return INTEGER IS
 		variable i:BIT;
 		variable contador: INTEGER;
-		begin
-			i:='1';
-			contador:=0;
-			while i = '1' loop
-				i := sensores(contador);
-				contador := contador + 1;
-				if i=0
-					salida:=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
-				elsif contador=256
-					salida:=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
-				end if;
-			end loop;
-		return salida;
-	END buscador;
+	begin
+		i:='1';
+		contador:=0;
+		while i = '1' or contador = 256 loop
+			i := sensores(contador);
+			contador := contador + 1;
+		end loop;
+	return contador;
+END buscador;
+
 
 -- ********** COMIENZO DE PROGRAMA **********
 BEGIN
@@ -110,16 +107,18 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 			--SUM: suma_resta PORT MAP (count, '0', count);
 			count <= count+1;
 
-			lo_que_devuelve_el_buscador<=buscador(sensores);
+			v<=buscador(sensores); -- En entero que devuelve el buscador
+			a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
+			plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
 
-			to_mostrar_fila(0)<=lo_que_devuelve_el_buscador(0);
-			to_mostrar_fila(1)<=lo_que_devuelve_el_buscador(1);
-			to_mostrar_fila(2)<=lo_que_devuelve_el_buscador(2);
-			to_mostrar_columna(0)<=lo_que_devuelve_el_buscador(3);
-			to_mostrar_columna(1)<=lo_que_devuelve_el_buscador(4);
-			to_mostrar_columna(2)<=lo_que_devuelve_el_buscador(5);
-			to_mostrar_planta(0)<=lo_que_devuelve_el_buscador(6);
-			to_mostrar_planta(1)<=lo_que_devuelve_el_buscador(7);
+			to_mostrar_fila(0)<=plaza_libre(0);
+			to_mostrar_fila(1)<=plaza_libre(1);
+			to_mostrar_fila(2)<=plaza_libre(2);
+			to_mostrar_columna(0)<=plaza_libre(3);
+			to_mostrar_columna(1)<=plaza_libre(4);
+			to_mostrar_columna(2)<=plaza_libre(5);
+			to_mostrar_planta(0)<=plaza_libre(6);
+			to_mostrar_planta(1)<=plaza_libre(7);
 
 			-- TO-DO: buscar una plaza libre para posteriormente mostrarla:
 				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
