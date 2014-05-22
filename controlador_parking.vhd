@@ -19,7 +19,7 @@ ENTITY controlador_parking IS
 		sensor_salida: IN BIT;
 		sensores: IN BIT_VECTOR (255 DOWNTO 0);
 
-		estado_parking: OUT BIT;
+		luz_estado: OUT BIT;
 		display_planta: OUT BIT_VECTOR(6 DOWNTO 0);
 		display_columna: OUT BIT_VECTOR(6 DOWNTO 0);
 		display_fila: OUT BIT_VECTOR(6 DOWNTO 0)
@@ -33,20 +33,23 @@ ARCHITECTURE controlador_arch OF controlador_parking IS
 
 -- ********* Declaración de componentes a usar *********
 
-COMPONENT Deco_Parking IS
+COMPONENT decodificador IS
 	PORT(
-		entradas_planta:IN BIT_VECTOR(1 DOWNTO 0);entradas_plaza1:IN BIT_VECTOR(2 DOWNTO 0);entrada_plaza2: IN BIT_VECTOR(2 DOWNTO 0); 
-		salidas_planta:OUT BIT_VECTOR(6 DOWNTO 0); salidas_plaza1:OUT BIT_VECTOR(6 DOWNTO 0);
-		salidas_plaza2:OUT BIT_VECTOR(6 DOWNTO 0)
-		);
+   lleno:IN BIT; entradas_planta:IN BIT_VECTOR(1 DOWNTO 0);ent_columna:IN BIT_VECTOR(2 DOWNTO 0);ent_fila: IN BIT_VECTOR(2 DOWNTO 0); 
+   salidas_planta:OUT BIT_VECTOR(6 DOWNTO 0); salidas_plaza1:OUT BIT_VECTOR(6 DOWNTO 0);
+   salidas_plaza2:OUT BIT_VECTOR(6 DOWNTO 0)
+   );
 End COMPONENT;
 
 
-COMPONENT detector_secuencia is 
+COMPONENT sensor is 
 	PORT (clk,x: IN BIT; 
 		z: OUT BIT
 		);
 end COMPONENT;              
+
+FOR ALL: decodificador USE ENTITY WORK.Deco_Parking(dec_parking_funcion);
+FOR ALL: sensor USE ENTITY WORK.detector_secuencia(arqDetector);
 
 -- ********* Declaración de señales *********
  
@@ -56,6 +59,7 @@ SIGNAL lo_que_devuelve_el_buscador: BIT_VECTOR (8 DOWNTO 0);
 SIGNAL to_mostrar_planta: BIT_VECTOR (1 DOWNTO 0);
 SIGNAL to_mostrar_columna: BIT_VECTOR(2 DOWNTO 0);
 SIGNAL to_mostrar_fila: BIT_VECTOR(2 DOWNTO 0);
+SIGNAL estado_parking: BIT;
 
 -- ********* Declaración de funciones *********
 
@@ -71,9 +75,9 @@ function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
 				i := sensores(contador);
 				contador := contador + 1;
 				if i=0
-					salida<=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
+					salida:=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
 				elsif contador=256
-					salida<=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
+					salida:=std_logic_vector(to_bitvector(conv_std_logic_vector(contador,9), 9));
 				end if;
 			end loop;
 		return salida;
@@ -81,13 +85,18 @@ function buscador(sensores: BIT_VECTOR(255 DOWNTO 0))
 
 -- ********** COMIENZO DE PROGRAMA **********
 BEGIN
-
+		A1: sensor PORT MAP(clk, sensor_entrada, detector_entrada_OUT);
+		A2: sensor PORT MAP(clk, sensor_salida, detector_salida_OUT);
+		D1: decodificador PORT MAP(estado_parking, to_mostrar_planta, to_mostrar_columna, to_mostrar_fila, display_planta, display_columna, display_fila);
 PROCESS(clk, sensor_entrada, sensor_salida)
 	BEGIN
 		-- mandar las entradas sensor_entrada y sensor_salida a su detector de secuencia correspondiente junto con el reloj, este devolverá un uno cuando se detecte la secuencia 00, 
 		-- que sera cuando un coche ha interrumpido el laser que compone el sensor.
-		SENSOREN: detector_secuencia PORT MAP(clk, sensor_entrada, detector_entrada_OUT);
-		SENSORSAL: detector_secuencia PORT MAP(clk, sensor_salida, detector_salida_OUT);
+		IF count = 255 THEN
+			estado_parking <='1'; -- Parking lleno, luz roja.
+			ELSE estado_parking <= '0';
+		END IF;
+
 
 		IF detector_salida_OUT = '1' AND detector_salida_OUT'EVENT THEN
 			-- usar sumador/restador para restar, pasarle que tiene que restar y la cuenta total. Devolverá el valor de la nueva cuenta total -1.
@@ -116,14 +125,13 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 				-- 1. Mandar los sensores de cada plaza a un buscador que devolverá un vector con el formato: [plaza encontrada][planta][columna][fila]. Se mandarán a cuatro buscadores, uno por planta.
 				-- 2. Cuando se tenga la plaza libre por planta y si hay o no disponible, se mandará a buscar, para que nos quede sólo una plaza que será la escogida, a un selector de planta.
 			-- TO-DO: la plaza libre asignada se pasará al decodificador para posteriormente mostrarla en la pantalla según corresponda y poder visualizarla mediante digitos.
+			IF estado_parking = '1' THEN
+				 luz_estado <='1'; -- Parking lleno, luz roja.
+			ELSE luz_estado <= '0';
+				END IF;
 		END IF;
 
-		DECOD: Decod_Planta PORT MAP(estado_parking, to_mostrar_planta, to_mostrar_columna, to_mostrar_fila, display_planta, display_columna, display_fila);
 		-- Actualizar identificador de parking lleno o vacío.
-		IF count = 255 THEN
-			estado_parking <='1'; -- Parking lleno, luz roja.
-			ELSE estado_parking <= '0';
-		END IF;
 
 END PROCESS;
 
