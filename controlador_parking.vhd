@@ -61,7 +61,7 @@ SIGNAL to_mostrar_columna: BIT_VECTOR(2 DOWNTO 0);
 SIGNAL to_mostrar_fila: BIT_VECTOR(2 DOWNTO 0);
 SIGNAL estado_parking: BIT;
 signal a: std_logic_vector(8 DOWNTO 0);
-
+SIGNAL v: INTEGER;
 
 -- ********* Declaración de funciones *********
 
