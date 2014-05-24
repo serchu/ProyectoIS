@@ -112,20 +112,20 @@ PROCESS(clk, sensor_entrada, sensor_salida)
 			--SUM: suma_resta PORT MAP (count, '0', count);
 			count <= count+1;
 
-			v<=buscador(sensores_planta1); -- En entero que devuelve el buscador
+			v<=buscador(sensores_planta1); -- En entero que devuelve el buscador de los sensores de la planta 1
 			a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
 			plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
-			if plaza_libre(8)='1' then
-				v<=buscador(sensores_planta2); -- En entero que devuelve el buscador
+			if plaza_libre(8)='1' then -- En caso de que no encuentre ninguno libre en la primera planta
+				v<=buscador(sensores_planta2); -- En entero que devuelve el buscador de la planta 2
 				a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
 				plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
 
-				if plaza_libre(8)='1' then
+				if plaza_libre(8)='1' then -- En caso de que no encuentre ninguno libre en la segunda planta
 					v<=buscador(sensores_planta3); -- En entero que devuelve el buscador
 					a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
 					plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
-					
-					if plaza_libre(8)='1' then
+
+					if plaza_libre(8)='1' then -- En caso de que no encuentre ninguno libre en la tercera planta
 						v<=buscador(sensores_planta4); -- En entero que devuelve el buscador
 						a <= conv_std_logic_vector(v,9); -- Para pasarlo a vector logico
 						plaza_libre <= to_bitvector(a);  -- Para pasar el vector logico a vector de bits
